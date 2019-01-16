@@ -8,6 +8,7 @@ public class Config {
 
 
     public static String url(String fun){
-        return base+fun+"?access_token="+token;
+//        return base+fun+"?access_token="+token;
+        return base+fun;
     }
 }

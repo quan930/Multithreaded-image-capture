@@ -32,13 +32,13 @@ public class ImageHandleHelper {
      * @param urls 图片地址 list
      * @return bufferedImage list
      */
-    public List<BufferedImage> getImages(List<String> urls){
+    public List<BufferedImage> getImages(List<String> urls) {
         long start = new Date().getTime();
         System.setProperty("https.protocols", "TLSv1,TLSv1.1,TLSv1.2");////设置https协议访问
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(80);//定长线程池
+        CountDownLatch countDownLatch = new CountDownLatch(urls.size());
 //        BlockingQueue<BufferedImage> queue = new LinkedBlockingQueue<>();
         BlockingQueue<BufferedImage> queue = new ArrayBlockingQueue<>(urls.size());
-        AtomicInteger m = new AtomicInteger();//计数器 线程安全
         urls.forEach((u)-> fixedThreadPool.execute(() -> {
             try {
                 URL url = new URL(u);
@@ -50,12 +50,13 @@ public class ImageHandleHelper {
             } catch (IOException e) {
                 e.printStackTrace();
             }finally {
-                m.addAndGet(1);
-//                System.out.println(m.get());
+                countDownLatch.countDown();
             }
         }));
-        while (m.get()!=urls.size()){
-
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         fixedThreadPool.shutdown();
         long end = new Date().getTime();
